@@ -1,11 +1,105 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Моя первая страница</title>
-</head>
-<body>
-    <h1>Привет, мир!</h1>
-</body>
-</html>
+<button id="loginBtn">Войти через GitHub</button>
+<button id="logoutBtn" style="display: none;">Выйти</button>
+<button id="writeBtn" disabled>Записать данные профиля</button>
+
+<!-- Форма добавления оценок (скрыта до авторизации) -->
+<div id="gradesForm" style="display: none; margin-top: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; max-width: 300px;">
+  <h3>Добавить оценку</h3>
+  <input type="text" id="subjectInput" placeholder="Предмет (например, Математика)" style="display:block; margin-bottom: 8px; width:100%;">
+  <input type="number" id="gradeInput" placeholder="Оценка (например, 5)" min="1" max="10" style="display:block; margin-bottom: 8px; width:100%;">
+  <button id="submitGradeBtn" style="width: 100%;">Сохранить оценку</button>
+</div>
+
+<div id="dataContainer" style="margin-top: 20px; white-space: pre-wrap;">Пожалуйста, авторизуйтесь.</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { onAuthStateChanged, getAuth, signInWithPopup, GithubAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAFDCNh4ElS5r-vOptXacCHbaJFn4J-KSk",
+  authDomain: "project456-a78d8.firebaseapp.com",
+  databaseURL: "https://project456-a78d8-default-rtdb.firebaseio.com",
+  projectId: "project456-a78d8",
+  storageBucket: "project456-a78d8.firebasestorage.app",
+  messagingSenderId: "813964467113",
+  appId: "1:813964467113:web:615997834cef9da21d82b8",
+  measurementId: "G-93G0K3DYBK"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const provider = new GithubAuthProvider();
+
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const writeBtn = document.getElementById("writeBtn");
+const gradesForm = document.getElementById("gradesForm");
+const dataContainer = document.getElementById("dataContainer");
+
+let currentUser = null;
+
+// Вход через GitHub
+loginBtn.addEventListener("click", () => {
+  signInWithPopup(auth, provider).catch(err => console.error("Ошибка входа:", err));
+});
+
+// Выход из системы
+logoutBtn.addEventListener("click", () => {
+  signOut(auth).catch(err => console.error("Ошибка выхода:", err));
+});
+
+// Состояние авторизации
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  if (user) {
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+    writeBtn.disabled = false;
+    gradesForm.style.display = "block";
+
+    // Слушаем и выводим весь профиль и список оценок пользователя в реальном времени
+    onValue(ref(db, `users/${user.uid}`), (snapshot) => {
+      const data = snapshot.val();
+      dataContainer.innerText = data ? JSON.stringify(data, null, 2) : "Данных в базе пока нет.";
+    });
+  } else {
+    loginBtn.style.display = "block";
+    logoutBtn.style.display = "none";
+    writeBtn.disabled = true;
+    gradesForm.style.display = "none";
+    dataContainer.innerText = "Пожалуйста, авторизуйтесь.";
+  }
+});
+
+// Запись данных профиля
+writeBtn.addEventListener("click", () => {
+  if (currentUser) {
+    set(ref(db, `users/${currentUser.uid}/profile`), {
+      name: currentUser.displayName || "Пользователь",
+      email: currentUser.email
+    });
+  }
+});
+
+// Добавление оценки в список через push
+document.getElementById("submitGradeBtn").addEventListener("click", () => {
+  const subject = document.getElementById("subjectInput").value.trim();
+  const grade = document.getElementById("gradeInput").value.trim();
+
+  if (currentUser && subject && grade) {
+    const gradesRef = ref(db, `users/${currentUser.uid}/grades`);
+    push(gradesRef, {
+      subject: subject,
+      grade: Number(grade),
+      date: new Date().toLocaleDateString()
+    }).then(() => {
+      document.getElementById("subjectInput").value = "";
+      document.getElementById("gradeInput").value = "";
+      console.log("Оценка сохранена!");
+    }).catch(err => console.error("Ошибка записи:", err));
+  }
+});
+</script>
