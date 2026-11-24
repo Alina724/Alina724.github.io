@@ -10,6 +10,7 @@
   <button id="submitGradeBtn" style="width: 100%;">Сохранить оценку</button>
 </div>
 <div id="emailAuthForm" style="margin-top: 10px; display: inline-block;">
+  
   <input type="email" id="emailInput" placeholder="Email" style="width: 120px;">
   <input type="password" id="passwordInput" placeholder="Пароль" style="width: 120px;">
   <button id="emailLoginBtn">Войти</button>
@@ -43,7 +44,11 @@ const logoutBtn = document.getElementById("logoutBtn");
 const writeBtn = document.getElementById("writeBtn");
 const gradesForm = document.getElementById("gradesForm");
 const dataContainer = document.getElementById("dataContainer");
-
+const emailAuthForm = document.getElementById("emailAuthForm");
+const emailInput = document.getElementById("emailInput");
+const passwordInput = document.getElementById("passwordInput");
+const emailLoginBtn = document.getElementById("emailLoginBtn");
+const emailRegBtn = document.getElementById("emailRegBtn");
 let currentUser = null;
 
 // Вход через GitHub
