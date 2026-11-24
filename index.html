@@ -1,3 +1,12 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя первая страница</title>
+</head>
+<body>
+    
 <button id="loginBtn">Войти через GitHub</button>
 <button id="logoutBtn" style="display: none;">Выйти</button>
 <button id="writeBtn" disabled>Записать данные профиля</button>
@@ -10,7 +19,6 @@
   <button id="submitGradeBtn" style="width: 100%;">Сохранить оценку</button>
 </div>
 <div id="emailAuthForm" style="margin-top: 10px; display: inline-block;">
-  
   <input type="email" id="emailInput" placeholder="Email" style="width: 120px;">
   <input type="password" id="passwordInput" placeholder="Пароль" style="width: 120px;">
   <button id="emailLoginBtn">Войти</button>
@@ -20,7 +28,9 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { onAuthStateChanged, getAuth, signInWithPopup, GithubAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { onAuthStateChanged, getAuth, signInWithPopup, GithubAuthProvider, signOut, signInWithEmailAndPassword,
+        sendEmailVerification,// Добавлено
+  createUserWithEmailAndPassword} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -44,11 +54,13 @@ const logoutBtn = document.getElementById("logoutBtn");
 const writeBtn = document.getElementById("writeBtn");
 const gradesForm = document.getElementById("gradesForm");
 const dataContainer = document.getElementById("dataContainer");
+const googleLoginBtn = document.getElementById("googleLoginBtn");
 const emailAuthForm = document.getElementById("emailAuthForm");
 const emailInput = document.getElementById("emailInput");
 const passwordInput = document.getElementById("passwordInput");
 const emailLoginBtn = document.getElementById("emailLoginBtn");
 const emailRegBtn = document.getElementById("emailRegBtn");
+    
 let currentUser = null;
 
 // Вход через GitHub
@@ -93,7 +105,18 @@ writeBtn.addEventListener("click", () => {
     });
   }
 });
-
+// Регистрация по почте и паролю
+emailRegBtn.addEventListener("click", () => {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  if (email && password) {
+      
+    createUserWithEmailAndPassword(auth, email, password);
+      sendEmailVerification(); 
+//      .then( function() {   sendEmailVerification();  alert("Вы успешно    зарегистрированы!"); })
+ //     .catch(err => console.error("Ошибка регистрации:", err));
+  }
+});
 // Добавление оценки в список через push
 document.getElementById("submitGradeBtn").addEventListener("click", () => {
   const subject = document.getElementById("subjectInput").value.trim();
